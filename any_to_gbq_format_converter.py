@@ -9,18 +9,20 @@ import ConfigParser
 import dateutil.parser
 import pandas as pd
 import xmltodict
+import argparse
+
 
 
 class JsonUtil(object):
 
-    def __init__(self):
+    def __init__(self, file_name):
         """
         This module aims to take files of different data formats and convert them
         into JSON (New line delimeter) format which allows loading the data into GBQ.
         """
+        self.input_file = file_name
         config = ConfigParser.ConfigParser()
         config.readfp(open(r'config.ini'))
-        self.input_file = config.get('Path', 'input_file')
         self.output_file = config.get('Path', 'output_file')
 
     def to_json(self):
@@ -29,31 +31,31 @@ class JsonUtil(object):
         input files are directed to read function and
         the output is directed to data_massage function
         """
-        json_format = self.read_file(fileformat=self.input_file)
+        json_format = self.read_file(self.input_file)
         data_massage = self.data_massage(json_format)
 
-    def read_file(self, fileformat):
+    def read_file(self, file_format):
         """
         The input files of different formats are read
         using Pandas and converted into .json format.
 
-        :param fileformat: Any format files(.csv, .xlsx etc)
+        :param file_format: Any format files(.csv, .xlsx etc)
         :return: .json format data
 
         """
-        if fileformat.endswith('.xml'):
-            with open(fileformat, "rb") as out:
+        if file_format.endswith('.xml'):
+            with open(file_format, "rb") as out:
                 xml_data = xmltodict.parse(out)
-                jfile = json.dumps(xml_data, indent=4)
+                json_file = json.dumps(xml_data, indent=4)
         else:
 
-            if fileformat.endswith('.csv'):
-                jfile = pd.read_csv(fileformat, chunksize=10000)
-            elif fileformat.endswith('.xlsx'):
-                jfile = pd.read_excel(fileformat, chunksize=10000)
+            if file_format.endswith('.csv'):
+                json_file = pd.read_csv(file_format)
+            elif file_format.endswith('.xlsx'):
+                json_file = pd.read_excel(file_format)
             else:
                 return
-        rooms = json.loads(jfile.to_json(orient='records'))
+        rooms = json.loads(json_file.to_json(orient='records'))
         room_data = json.dumps(rooms)
         return room_data
 
@@ -72,12 +74,16 @@ class JsonUtil(object):
             date_val = dateutil.parser.parse(line_dict['date'])
             date_val = date_val.strftime('%Y%m%d')
             line_dict['date'] = date_val
-            print line_dict
             with open(self.output_file, 'a') as write_file:
                 write_file.write(json.dumps(line_dict) + '\n')
 
 if __name__ == '__main__':
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--file')
+    file_name = parser.parse_args()
 
-    obj = JsonUtil()
+    obj = JsonUtil(file_name.file)
     obj.to_json()
+
+
 
