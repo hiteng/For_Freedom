@@ -23,7 +23,7 @@ class DataTest(unittest.TestCase):
         self.assertEqual(obj2.data_massage(data), out)
 
     def test_date_3(self):
-        data = '[{"date": "2019-02-03 14:29:34", "building": "building", "notes": "djhf", "name": "Room"}]'
+        data = '[{"date": "2019-03-02 14:29:34", "building": "building", "notes": "djhf", "name": "Room"}]'
         out = {u'building': u'building', u'date': '20190203 14:02:34', u'name': u'Room', u'notes': u'djhf'}
         obj3 = JsonUtil(data)
 
